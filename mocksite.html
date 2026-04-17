@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AiSensy – How to Broadcast WhatsApp Messages</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #25D366;
+    --green-dark: #128C7E;
+    --accent: #6C5CE7;
+    --accent2: #00B894;
+    --bg: #0f1117;
+    --surface: #1a1d2e;
+    --surface2: #232740;
+    --border: #2e3250;
+    --text: #e8eaf6;
+    --text-muted: #8892b0;
+    --white: #ffffff;
+    --robot-body: #6C5CE7;
+    --robot-light: #a29bfe;
+    --highlight: rgba(108,92,231,0.18);
+    --shadow: 0 8px 40px rgba(0,0,0,0.55);
+    --radius: 16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* ─── TOP NAV ─── */
+  .topbar {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-logo { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo svg { width: 28px; height: 28px; }
+  .topbar-logo span {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    background: linear-gradient(135deg, #a29bfe, #00cec9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-tag {
+    background: var(--highlight);
+    border: 1px solid var(--accent);
+    color: var(--robot-light);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  .main {
+    width: 100%;
+    max-width: 1280px;
+    padding: 40px 24px 80px;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    position: sticky;
+    top: 76px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sidebar-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    padding-left: 8px;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    position: relative;
+  }
+  .step-item:hover { background: var(--surface2); }
+  .step-item.active {
+    background: var(--highlight);
+    border-color: var(--accent);
+  }
+  .step-item.done .step-num { background: var(--accent2); color: #fff; }
+  .step-item.done .step-label { color: var(--text-muted); text-decoration: line-through; }
+  .step-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: all 0.3s;
+  }
+  .step-item.active .step-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .step-label { font-size: 13px; font-weight: 500; line-height: 1.3; }
+
+  /* ─── CONTENT AREA ─── */
+  .content { display: flex; flex-direction: column; gap: 24px; }
+
+  .progress-bar-wrap {
+    background: var(--surface);
+    border-radius: 8px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  /* ─── STEP CARD ─── */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    animation: cardIn 0.4s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-card-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .step-badge {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-card-header h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--white);
+  }
+
+  .step-card-body { padding: 24px 28px; }
+  .step-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+  .step-desc strong { color: var(--text); font-weight: 600; }
+
+  /* ─── MOCK UI ─── */
+  .mock-ui {
+    background: #12152b;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .mock-titlebar {
+    background: var(--surface2);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mock-dot.r { background: #ff5f57; }
+  .mock-dot.y { background: #ffbd2e; }
+  .mock-dot.g { background: #28c840; }
+  .mock-url {
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Specific mocked screens */
+  .mock-body { padding: 20px; min-height: 180px; }
+  .mock-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+  .mock-nav-item {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+  }
+  .mock-nav-item.active {
+    background: var(--highlight);
+    color: var(--robot-light);
+    font-weight: 600;
+  }
+
+  .mock-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .mock-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+  .mock-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .mock-btn.primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .mock-btn.secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .mock-btn.green {
+    background: var(--green-dark);
+    color: #fff;
+  }
+
+  .pulse-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%; height: 100%;
+    border-radius: 8px;
+    border: 2px solid var(--accent);
+    animation: pulseRing 1.6s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes pulseRing {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+  }
+
+  .highlight-area {
+    outline: 2px dashed var(--accent);
+    outline-offset: 3px;
+    border-radius: 8px;
+    animation: dashAnim 1s linear infinite;
+  }
+  @keyframes dashAnim {
+    to { outline-offset: 5px; }
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .status-badge.approved { background: rgba(0,184,148,0.15); color: var(--accent2); }
+  .status-badge.pending  { background: rgba(253,203,110,0.15); color: #fdcb6e; }
+
+  /* ─── CARD ACTIONS ─── */
+  .step-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn-next {
+    background: linear-gradient(135deg, var(--accent), #a29bfe);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(108,92,231,0.4);
+  }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(108,92,231,0.5); }
+  .btn-next:active { transform: translateY(0); }
+
+  .btn-skip {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-skip:hover { border-color: var(--accent); color: var(--text); }
+
+  .btn-restart {
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-restart:hover { transform: translateY(-2px); }
+
+  /* ─── ROBOT ─── */
+  .robot-wrap {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+    z-index: 200;
+  }
+  .robot-bubble {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 16px 16px 0 16px;
+    padding: 14px 18px;
+    max-width: 260px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text);
+    box-shadow: 0 8px 32px rgba(108,92,231,0.3);
+    animation: bubbleIn 0.35s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: scale(0.85) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .robot-bubble strong { color: var(--robot-light); }
+
+  /* SVG Robot */
+  .robot-svg-wrap {
+    width: 72px;
+    height: 72px;
+    filter: drop-shadow(0 4px 18px rgba(108,92,231,0.5));
+    animation: robotFloat 3s ease-in-out infinite;
+    cursor: pointer;
+  }
+  @keyframes robotFloat {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+
+  /* ─── COMPLETE SCREEN ─── */
+  .complete-card {
+    background: var(--surface);
+    border: 1px solid var(--accent2);
+    border-radius: var(--radius);
+    padding: 56px 40px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(0,184,148,0.15);
+    animation: cardIn 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  .complete-card h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 20px 0 12px;
+    background: linear-gradient(135deg, #00cec9, var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .complete-card p { color: var(--text-muted); font-size: 15px; line-height: 1.6; }
+  .confetti {
+    font-size: 48px;
+    animation: confettiBounce 0.6s cubic-bezier(.68,-0.55,.27,1.55);
+  }
+  @keyframes confettiBounce {
+    0%   { transform: scale(0) rotate(-30deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { position: static; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+    .step-item { flex: 1 1 auto; min-width: 120px; }
+    .robot-wrap { bottom: 16px; right: 16px; }
+    .robot-bubble { max-width: 210px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topbar">
+  <div class="topbar-logo">
+    <!-- AiSensy-style logo (WhatsApp leaf + chat) -->
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="8" fill="#6C5CE7"/>
+      <path d="M16 5C10.48 5 6 9.48 6 15c0 1.9.52 3.67 1.43 5.18L6 27l6.97-1.41A9.93 9.93 0 0016 26c5.52 0 10-4.48 10-10S21.52 5 16 5z" fill="#25D366"/>
+      <path d="M12 14h8M12 18h5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <span>AiSensy</span>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-tag">Interactive Tutorial</span>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">Steps</div>
+    <!-- Steps injected by JS -->
+  </aside>
+
+  <!-- CONTENT -->
+  <section class="content">
+    <div>
+      <div class="progress-label">
+        <span id="progress-text">Step 1 of 10</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="step-container"></div>
+  </section>
+</div>
+
+<!-- ROBOT -->
+<div class="robot-wrap" id="robot-wrap">
+  <div class="robot-bubble" id="robot-bubble">
+    👋 Hi! I'm <strong>Sensy</strong>, your AiSensy guide.<br>Let's send your first WhatsApp Broadcast!
+  </div>
+  <div class="robot-svg-wrap" id="robot-svg" title="That's me – Sensy!">
+    <!-- Robot SVG with AiSensy logo head -->
+    <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Antenna -->
+      <line x1="36" y1="6" x2="36" y2="14" stroke="#a29bfe" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="36" cy="5" r="3" fill="#6C5CE7"/>
+      <!-- Head = AiSensy logo square -->
+      <rect x="18" y="14" width="36" height="30" rx="8" fill="#6C5CE7"/>
+      <rect x="18" y="14" width="36" height="30" rx="8" fill="url(#headGrad)"/>
+      <!-- WhatsApp leaf inside head -->
+      <path d="M36 18c-4.42 0-8 3.58-8 8 0 1.52.42 2.94 1.14 4.14L28 36l5.57-1.13A7.96 7.96 0 0036 35c4.42 0 8-3.58 8-8s-3.58-8-8-8z" fill="#25D366"/>
+      <path d="M32.5 25h7M32.5 28.5h4.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+      <!-- Eyes -->
+      <circle cx="28" cy="47" r="3.5" fill="#1a1d2e"/>
+      <circle cx="44" cy="47" r="3.5" fill="#1a1d2e"/>
+      <circle cx="28" cy="47" r="2" fill="#a29bfe" class="robot-eye-left"/>
+      <circle cx="44" cy="47" r="2" fill="#a29bfe" class="robot-eye-right"/>
+      <!-- Mouth -->
+      <path d="M30 53 Q36 58 42 53" stroke="#a29bfe" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- Body -->
+      <rect x="22" y="56" width="28" height="14" rx="7" fill="#232740"/>
+      <!-- Arms -->
+      <rect x="10" y="57" width="10" height="6" rx="3" fill="#232740"/>
+      <rect x="52" y="57" width="10" height="6" rx="3" fill="#232740"/>
+      <!-- Gradient def -->
+      <defs>
+        <linearGradient id="headGrad" x1="18" y1="14" x2="54" y2="44" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#6C5CE7"/>
+          <stop offset="100%" stop-color="#4834d4"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  {
+    num: 1,
+    title: "Click 'Manage' in the Dashboard",
+    short: "Open Manage",
+    desc: "To send a WhatsApp Broadcast, you first need a <strong>pre-approved Template message</strong>. Head to the AiSensy Dashboard and click <strong>Manage</strong> to start creating one.",
+    robot: "First things first — click <strong>Manage</strong> in the top nav to create your template!",
+    action: "Click 'Manage'",
+    mockFn: "mockDashboard"
+  },
+  {
+    num: 2,
+    title: "Click '+New' to Create a Template",
+    short: "+ New Template",
+    desc: "Inside the Manage section, click the <strong>+New</strong> button to begin creating a new WhatsApp Template Message.",
+    robot: "See that <strong>+New</strong> button? Click it to create your first template!",
+    action: "Click '+New'",
+    mockFn: "mockManage"
+  },
+  {
+    num: 3,
+    title: "Fill in the Template Fields",
+    short: "Fill Template",
+    desc: "Fill in all required fields: <strong>Template Category, Template Name, Message Type, Message Format, CTA Buttons (optional)</strong> and <strong>Template Language</strong>.",
+    robot: "Fill in your template details carefully. Each field matters for WhatsApp approval!",
+    action: "Fill & Continue",
+    mockFn: "mockTemplateForm"
+  },
+  {
+    num: 4,
+    title: "Submit Template for Approval",
+    short: "Submit Template",
+    desc: "After filling in all required fields, click <strong>Submit</strong> to send your template to WhatsApp for approval. Approval typically takes a few minutes.",
+    robot: "Looking good! Hit <strong>Submit</strong> to send your template to WhatsApp for review.",
+    action: "Click 'Submit'",
+    mockFn: "mockSubmit"
+  },
+  {
+    num: 5,
+    title: "Check Approval — Click 'Sync Status'",
+    short: "Sync Status",
+    desc: "Go to the <strong>Approved</strong> section in Template Messages and click <strong>Sync Status</strong> to verify that WhatsApp has approved your template.",
+    robot: "Let's verify approval! Click <strong>Sync Status</strong> to check if WhatsApp approved your template.",
+    action: "Sync Status",
+    mockFn: "mockApproved"
+  },
+  {
+    num: 6,
+    title: "Go to Contacts & Click 'Import'",
+    short: "Import Contacts",
+    desc: "Navigate to the <strong>Contacts</strong> page and click <strong>Import</strong>. You'll upload contacts in <strong>.csv format</strong>.",
+    robot: "Now let's add your audience. Go to <strong>Contacts</strong> and click <strong>Import</strong>!",
+    action: "Click 'Import'",
+    mockFn: "mockContacts"
+  },
+  {
+    num: 7,
+    title: "Upload Your .csv File",
+    short: "Upload CSV",
+    desc: "Prepare your contacts spreadsheet with columns like <strong>Name, Mobile Phone</strong> and <strong>Tag</strong>. Export it as <strong>.csv</strong>, then click <strong>Upload File</strong> in AiSensy.",
+    robot: "Export your spreadsheet as <strong>.csv</strong>, then upload it here. Add a tag so you can filter later!",
+    action: "Upload File",
+    mockFn: "mockUploadCSV"
+  },
+  {
+    num: 8,
+    title: "Map CSV Columns to Attributes",
+    short: "Map Attributes",
+    desc: "Map each column in your CSV to the correct AiSensy attribute — <strong>Name → Name, Mobile Phone → Phone, Tag → Tag</strong>. Incorrect mapping will cause import to fail.",
+    robot: "Match each column to the right attribute. Get this right — wrong mapping will fail the import!",
+    action: "Confirm Mapping",
+    mockFn: "mockMapping"
+  },
+  {
+    num: 9,
+    title: "Filter Contacts & Click 'Broadcast'",
+    short: "Filter & Broadcast",
+    desc: "Use the <strong>Filter</strong> button to filter by Tag (e.g. 'leads'). Select the contacts and click <strong>Broadcast</strong> to start building your campaign.",
+    robot: "Filter by your tag, select all contacts, then hit <strong>Broadcast</strong> — you're almost there!",
+    action: "Click 'Broadcast'",
+    mockFn: "mockFilter"
+  },
+  {
+    num: 10,
+    title: "Configure Campaign & Send Now",
+    short: "Send Broadcast",
+    desc: "Add a <strong>unique Campaign Name</strong>, select your approved template, fill in any parameter values, then click <strong>Send Now</strong>. You can also schedule for up to 2 months ahead (Pro plan).",
+    robot: "Final step! Name your campaign, pick your template, and hit <strong>Send Now</strong>. 🚀",
+    action: "Send Now!",
+    mockFn: "mockSendCampaign"
+  }
+];
+
+const ROBOT_MESSAGES = [
+  "👋 Hi! I'm <strong>Sensy</strong>, your AiSensy guide.<br>Let's send your first WhatsApp Broadcast!",
+  ...STEPS.map(s => s.robot),
+  "🎉 <strong>Amazing!</strong> You've completed the full broadcast tutorial. You're ready to send WhatsApp campaigns like a pro!"
+];
+
+let current = 0;
+
+/* ─── BUILD SIDEBAR ─── */
+function buildSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = '<div class="sidebar-title">Steps</div>';
+  STEPS.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'step-item' + (i === current ? ' active' : '') + (i < current ? ' done' : '');
+    el.innerHTML = `<div class="step-num">${i < current ? '✓' : s.num}</div><div class="step-label">${s.short}</div>`;
+    el.onclick = () => jumpTo(i);
+    sb.appendChild(el);
+  });
+}
+
+function jumpTo(i) {
+  current = i;
+  render();
+}
+
+/* ─── MOCK SCREENS ─── */
+function mockDashboard() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/dashboard</div></div>
+    <div class="mock-body">
+      <div class="mock-nav">
+        <div class="mock-nav-item">Dashboard</div>
+        <div class="mock-nav-item active highlight-area">Manage</div>
+        <div class="mock-nav-item">Contacts</div>
+        <div class="mock-nav-item">Campaigns</div>
+        <div class="mock-nav-item">Analytics</div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:12px">
+        <div style="flex:1;background:var(--surface2);border-radius:10px;padding:16px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">MESSAGES SENT</div><div style="font-size:24px;font-weight:700">12,483</div></div>
+        <div style="flex:1;background:var(--surface2);border-radius:10px;padding:16px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">CONTACTS</div><div style="font-size:24px;font-weight:700">3,240</div></div>
+        <div style="flex:1;background:var(--surface2);border-radius:10px;padding:16px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">CAMPAIGNS</div><div style="font-size:24px;font-weight:700">18</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function mockManage() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/manage/templates</div></div>
+    <div class="mock-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span style="font-weight:600;font-size:15px">Template Messages</span>
+        <button class="mock-btn primary highlight-area" style="position:relative">
+          <span>+</span> New
+          <div class="pulse-ring"></div>
+        </button>
+      </div>
+      <table class="mock-table">
+        <tr><th>Template Name</th><th>Category</th><th>Status</th></tr>
+        <tr><td>welcome_message</td><td>UTILITY</td><td><span class="status-badge approved">Approved</span></td></tr>
+        <tr><td>order_update</td><td>UTILITY</td><td><span class="status-badge approved">Approved</span></td></tr>
+      </table>
+    </div>
+  </div>`;
+}
+
+function mockTemplateForm() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/manage/templates/new</div></div>
+    <div class="mock-body">
+      <div style="font-weight:600;font-size:15px;margin-bottom:14px">Create New Template</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">TEMPLATE CATEGORY *</div><div style="background:var(--surface2);border-radius:7px;padding:9px 12px;font-size:13px">Marketing</div></div>
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">TEMPLATE NAME *</div><div style="background:var(--surface2);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--robot-light)">summer_sale_2025</div></div>
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">MESSAGE FORMAT *</div><div style="background:var(--surface2);border-radius:7px;padding:9px 12px;font-size:13px">Text</div></div>
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">LANGUAGE *</div><div style="background:var(--surface2);border-radius:7px;padding:9px 12px;font-size:13px">English</div></div>
+      </div>
+      <div style="margin-top:12px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">MESSAGE BODY *</div><div style="background:var(--surface2);border-radius:7px;padding:10px 12px;font-size:13px;line-height:1.6">Hi {{1}}, our Summer Sale is live! Get up to 50% off. Shop now 👇</div></div>
+    </div>
+  </div>`;
+}
+
+function mockSubmit() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/manage/templates/new</div></div>
+    <div class="mock-body">
+      <div style="font-weight:600;font-size:15px;margin-bottom:16px">Review & Submit Template</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:13px;line-height:1.7">
+        <div style="color:var(--text-muted);font-size:11px;margin-bottom:8px;font-weight:600;letter-spacing:.05em">PREVIEW</div>
+        Hi <strong>John</strong>, our Summer Sale is live! Get up to 50% off. Shop now 👇
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="mock-btn secondary">Save Draft</button>
+        <button class="mock-btn primary highlight-area" style="position:relative">
+          Submit for Approval
+          <div class="pulse-ring"></div>
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function mockApproved() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/manage/templates</div></div>
+    <div class="mock-body">
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="mock-btn secondary">All</button>
+        <button class="mock-btn primary" style="font-size:12px">Approved</button>
+        <button class="mock-btn secondary">Pending</button>
+        <button class="mock-btn secondary" style="margin-left:auto;position:relative" class="highlight-area">
+          Sync Status
+          <div class="pulse-ring"></div>
+        </button>
+      </div>
+      <table class="mock-table">
+        <tr><th>Template Name</th><th>Category</th><th>Status</th></tr>
+        <tr><td style="color:var(--robot-light)">summer_sale_2025</td><td>Marketing</td><td><span class="status-badge approved">Approved ✓</span></td></tr>
+        <tr><td>welcome_message</td><td>Utility</td><td><span class="status-badge approved">Approved</span></td></tr>
+      </table>
+    </div>
+  </div>`;
+}
+
+function mockContacts() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/contacts</div></div>
+    <div class="mock-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span style="font-weight:600;font-size:15px">Contacts (3,240)</span>
+        <div style="display:flex;gap:8px">
+          <button class="mock-btn secondary">Export</button>
+          <button class="mock-btn primary highlight-area" style="position:relative">
+            Import
+            <div class="pulse-ring"></div>
+          </button>
+        </div>
+      </div>
+      <table class="mock-table">
+        <tr><th>Name</th><th>Phone</th><th>Tag</th><th>Last Seen</th></tr>
+        <tr><td>Amit Sharma</td><td>+91 9876543210</td><td>leads</td><td>Today</td></tr>
+        <tr><td>Priya Patel</td><td>+91 9988776655</td><td>customers</td><td>Yesterday</td></tr>
+      </table>
+    </div>
+  </div>`;
+}
+
+function mockUploadCSV() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/contacts/import</div></div>
+    <div class="mock-body">
+      <div style="font-weight:600;font-size:15px;margin-bottom:16px">Import Contacts</div>
+      <div style="border:2px dashed var(--accent);border-radius:12px;padding:32px;text-align:center;margin-bottom:14px" class="highlight-area">
+        <div style="font-size:28px;margin-bottom:8px">📄</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">Drop your .csv file here</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Columns: Name, Mobile Phone, Tag</div>
+        <button class="mock-btn primary">Upload File</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted)">💡 Tip: Add a shared tag (e.g. "leads") to all contacts for easy filtering later.</div>
+    </div>
+  </div>`;
+}
+
+function mockMapping() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/contacts/import/map</div></div>
+    <div class="mock-body">
+      <div style="font-weight:600;font-size:15px;margin-bottom:16px">Map Columns to Attributes</div>
+      <table class="mock-table">
+        <tr><th>CSV Column</th><th>→</th><th>AiSensy Attribute</th></tr>
+        <tr><td>Name</td><td style="color:var(--accent2)">→</td><td style="color:var(--accent2);font-weight:600">Name ✓</td></tr>
+        <tr><td>Mobile Phone</td><td style="color:var(--accent2)">→</td><td style="color:var(--accent2);font-weight:600">Phone Number ✓</td></tr>
+        <tr><td>Tag</td><td style="color:var(--accent2)">→</td><td style="color:var(--accent2);font-weight:600">Tags ✓</td></tr>
+      </table>
+      <button class="mock-btn primary highlight-area" style="margin-top:14px;position:relative">
+        Confirm Mapping & Import
+        <div class="pulse-ring"></div>
+      </button>
+    </div>
+  </div>`;
+}
+
+function mockFilter() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/contacts</div></div>
+    <div class="mock-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span style="font-weight:600;font-size:15px">Contacts (19 selected)</span>
+        <div style="display:flex;gap:8px">
+          <button class="mock-btn secondary highlight-area" style="position:relative">
+            🔽 Filter <span style="position:absolute;top:-4px;right:-4px;width:8px;height:8px;background:var(--accent);border-radius:50%"></span>
+          </button>
+          <button class="mock-btn green highlight-area" style="position:relative">
+            📢 Broadcast
+            <div class="pulse-ring"></div>
+          </button>
+        </div>
+      </div>
+      <table class="mock-table">
+        <tr><th><input type="checkbox" checked disabled></th><th>Name</th><th>Phone</th><th>Tag</th></tr>
+        <tr><td><input type="checkbox" checked disabled></td><td>Amit Sharma</td><td>+91 9876…</td><td><span style="background:rgba(108,92,231,.2);color:var(--robot-light);padding:2px 8px;border-radius:10px;font-size:11px">leads</span></td></tr>
+        <tr><td><input type="checkbox" checked disabled></td><td>Riya Gupta</td><td>+91 9765…</td><td><span style="background:rgba(108,92,231,.2);color:var(--robot-light);padding:2px 8px;border-radius:10px;font-size:11px">leads</span></td></tr>
+        <tr><td colspan="4" style="text-align:center;color:var(--text-muted);font-size:12px;padding-top:6px">+ 17 more contacts</td></tr>
+      </table>
+    </div>
+  </div>`;
+}
+
+function mockSendCampaign() {
+  return `
+  <div class="mock-ui">
+    <div class="mock-titlebar"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div><div class="mock-url">app.aisensy.com/campaigns/new</div></div>
+    <div class="mock-body">
+      <div style="font-weight:600;font-size:15px;margin-bottom:16px">New Broadcast Campaign</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">CAMPAIGN NAME *</div><div style="background:var(--surface2);border-radius:7px;padding:9px 12px;font-size:13px;color:var(--robot-light)">summer_sale_july_2025</div></div>
+        <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">TEMPLATE *</div><div style="background:var(--surface2);border-radius:7px;padding:9px 12px;font-size:13px">summer_sale_2025 <span class="status-badge approved" style="margin-left:6px">Approved</span></div></div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">PREVIEW</div>
+        Hi <strong>Amit</strong>, our Summer Sale is live! Get up to 50% off. Shop now 👇
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="mock-btn secondary">Schedule</button>
+        <button class="mock-btn green highlight-area" style="position:relative">
+          🚀 Send Now
+          <div class="pulse-ring"></div>
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+const MOCK_FNS = {
+  mockDashboard, mockManage, mockTemplateForm, mockSubmit, mockApproved,
+  mockContacts, mockUploadCSV, mockMapping, mockFilter, mockSendCampaign
+};
+
+/* ─── RENDER ─── */
+function render() {
+  buildSidebar();
+  updateProgress();
+
+  const container = document.getElementById('step-container');
+
+  if (current >= STEPS.length) {
+    container.innerHTML = `
+    <div class="complete-card">
+      <div class="confetti">🎉</div>
+      <h2>You're a WhatsApp Broadcast Pro!</h2>
+      <p>You've completed all 10 steps of the AiSensy broadcast tutorial.<br>You're now ready to send real campaigns and track their analytics.</p>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:28px;flex-wrap:wrap">
+        <button class="btn-restart" onclick="restartTutorial()">↺ Restart Tutorial</button>
+        <a href="https://app.aisensy.com" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--green-dark);color:#fff;border-radius:10px;text-decoration:none;font-family:'Sora',sans-serif;font-size:14px;font-weight:700">
+          Open AiSensy App ↗
+        </a>
+      </div>
+    </div>`;
+    setRobot(ROBOT_MESSAGES[STEPS.length]);
+    return;
+  }
+
+  const step = STEPS[current];
+  const mockHtml = MOCK_FNS[step.mockFn] ? MOCK_FNS[step.mockFn]() : '';
+
+  container.innerHTML = `
+  <div class="step-card">
+    <div class="step-card-header">
+      <div class="step-badge">Step ${step.num}</div>
+      <h2>${step.title}</h2>
+    </div>
+    <div class="step-card-body">
+      <p class="step-desc">${step.desc}</p>
+      ${mockHtml}
+      <div class="step-actions">
+        <button class="btn-next" onclick="nextStep()">
+          ${step.action} <span>→</span>
+        </button>
+        <button class="btn-skip" onclick="skipStep()">Skip tutorial</button>
+      </div>
+    </div>
+  </div>`;
+
+  setRobot(ROBOT_MESSAGES[current]);
+}
+
+function updateProgress() {
+  const pct = Math.round((current / STEPS.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-text').textContent =
+    current < STEPS.length ? `Step ${current + 1} of ${STEPS.length}` : 'Complete!';
+}
+
+function setRobot(msg) {
+  const bubble = document.getElementById('robot-bubble');
+  bubble.style.opacity = '0';
+  bubble.style.transform = 'scale(0.85) translateY(10px)';
+  setTimeout(() => {
+    bubble.innerHTML = msg;
+    bubble.style.transition = 'all 0.35s cubic-bezier(.4,0,.2,1)';
+    bubble.style.opacity = '1';
+    bubble.style.transform = 'scale(1) translateY(0)';
+  }, 150);
+}
+
+function nextStep() {
+  current++;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function skipStep() {
+  if (confirm('Skip this step and move to the next?')) {
+    nextStep();
+  }
+}
+
+function restartTutorial() {
+  current = 0;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
